@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file.
+              Any modifications will be overwritten.
+              To include a user specific buildfile here, simply create one in the same
+              directory with the processing instruction <?eclipse.ant.import?>
+              as the first entry and export the buildfile again. -->
+<project basedir="." default="build" name="DS_Project_02">
+	<property environment="env"/>
+	<property name="ECLIPSE_HOME" value="../../../eclipse/java-oxygen/eclipse/"/>
+	<property name="debuglevel" value="source,lines,vars"/>
+	<property name="target" value="1.8"/>
+	<property name="source" value="1.8"/>
+	<path id="DS_Project_02.classpath">
+		<pathelement location="bin"/>
+		<pathelement location="../../../Desktop/SEM3/Distrubuted/Project 2/thrift Libraries/lib/commons-codec-1.9.jar"/>
+		<pathelement location="../../../Desktop/SEM3/Distrubuted/Project 2/thrift Libraries/lib/commons-logging-1.2.jar"/>
+		<pathelement location="../../../Desktop/SEM3/Distrubuted/Project 2/thrift Libraries/lib/httpclient-4.4.1.jar"/>
+		<pathelement location="../../../Desktop/SEM3/Distrubuted/Project 2/thrift Libraries/lib/httpcore-4.4.1.jar"/>
+		<pathelement location="../../../Desktop/SEM3/Distrubuted/Project 2/thrift Libraries/lib/junit-4.4.jar"/>
+		<pathelement location="../../../Desktop/SEM3/Distrubuted/Project 2/thrift Libraries/lib/log4j-1.2.17.jar"/>
+		<pathelement location="../../../Desktop/SEM3/Distrubuted/Project 2/thrift Libraries/lib/servlet-api-2.5.jar"/>
+		<pathelement location="../../../Desktop/SEM3/Distrubuted/Project 2/thrift Libraries/lib/slf4j-api-1.7.12.jar"/>
+		<pathelement location="../../../Desktop/SEM3/Distrubuted/Project 2/thrift Libraries/lib/slf4j-log4j12-1.7.12.jar"/>
+		<pathelement location="../../../../../media/xneo/Bing/SEM3/Distrubuted/Project 2/thrift Libraries/libthrift-0.10.0.jar"/>
+		<pathelement location="../../../../../media/xneo/Bing/SEM3/Distrubuted/Project 2/thrift Libraries/libthrift-0.10.0-javadoc.jar"/>
+	</path>
+	<target name="init">
+		<mkdir dir="bin"/>
+		<copy includeemptydirs="false" todir="bin">
+			<fileset dir="src">
+				<exclude name="**/*.java"/>
+			</fileset>
+		</copy>
+	</target>
+	<target name="clean">
+		<delete dir="bin"/>
+	</target>
+	<target depends="clean" name="cleanall"/>
+	<target depends="build-subprojects,build-project" name="build"/>
+	<target name="build-subprojects"/>
+	<target depends="init" name="build-project">
+		<echo message="${ant.project.name}: ${ant.file}"/>
+		<javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
+			<src path="src"/>
+			<classpath refid="DS_Project_02.classpath"/>
+		</javac>
+	</target>
+	<target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
+	<target description="copy Eclipse compiler jars to ant lib directory" name="init-eclipse-compiler">
+		<copy todir="${ant.library.dir}">
+			<fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+		</copy>
+		<unzip dest="${ant.library.dir}">
+			<patternset includes="jdtCompilerAdapter.jar"/>
+			<fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+		</unzip>
+	</target>
+	<target description="compile project with Eclipse compiler" name="build-eclipse-compiler">
+		<property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
+		<antcall target="build"/>
+	</target>
+	<target name="JavaServer_thrift9090">
+		<java classname="JavaServer" failonerror="true" fork="yes">
+			<classpath refid="DS_Project_02.classpath"/>
+			<!--        	<arg value="${arg0}"/> -->
+			<arg value="9091"/>
+		</java>
+	</target>
+	<target name="JavaServer_thrift9091">
+		<java classname="JavaServer" failonerror="true" fork="yes">
+			<classpath refid="DS_Project_02.classpath"/>
+			<!--        	<arg value="${arg0}"/> -->
+			<arg value="9093"/>
+		</java>
+	</target>
+	<target name="JavaServer_thrift9092">
+		<java classname="JavaServer" failonerror="true" fork="yes">
+			<classpath refid="DS_Project_02.classpath"/>
+			<!--        	<arg value="${arg0}"/> -->
+			<arg value="9092"/>
+		</java>
+	</target>
+	<target name="JavaServer_thrift9093">
+		<java classname="JavaServer" failonerror="true" fork="yes">
+			<classpath refid="DS_Project_02.classpath"/>
+			<!--        	<arg value="${arg0}"/> -->
+			<arg value="9094"/>
+		</java>
+	</target>
+</project>

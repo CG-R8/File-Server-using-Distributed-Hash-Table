@@ -12,8 +12,6 @@ import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.TSSLTransportFactory.TSSLTransportParameters;
 
 // Generated code
-import tutorial.*;
-import shared.*;
 
 import java.util.HashMap;
 
@@ -29,15 +27,11 @@ public class JavaServer {
 
 			mcHandler = new MHandler();
 			FSProcessor = new FileStore.Processor(mcHandler);
-
-			// port= Integer.valueOf(args[0]);
-//			port = 8081;
-			port = 8080;
-			System.out.println(":::port "+port);
+			port = Integer.parseInt(args[0]);
+			System.out.println(":::port " + port);
 
 			Runnable simple = new Runnable() {
 				public void run() {
-
 					// simple(processor);
 					simple1(FSProcessor);
 				}
@@ -49,7 +43,9 @@ public class JavaServer {
 			new Thread(simple).start();
 			// new Thread(secure).start();
 
-		} catch (Exception x) {
+		} catch (
+
+		Exception x) {
 			x.printStackTrace();
 		}
 
@@ -66,7 +62,7 @@ public class JavaServer {
 
 			System.out.println("Starting the simple server...");
 			server.serve();
-		
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -88,6 +84,6 @@ public class JavaServer {
 		}
 	}
 
-	public static void secure(Calculator.Processor processor) {
+	public static void secure(FileStore.Processor processor) {
 	}
 }
