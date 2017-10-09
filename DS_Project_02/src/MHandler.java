@@ -9,7 +9,17 @@ import org.apache.thrift.transport.TTransportException;
 import chord_auto_generated.FileStore.Iface;
 import chord_auto_generated.NodeID;
 import chord_auto_generated.RFile;
+import chord_auto_generated.RFileMetadata;
 import chord_auto_generated.SystemException;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
@@ -22,10 +32,43 @@ public class MHandler implements Iface {
 	private NodeID currentNode = null;
 	private static List<NodeID> node_ID_list;
 
-	// nodesFingerTable.put("NODE_ID_HASH_Value", new fingerTable("NS01"));
 	@Override
 	public void writeFile(RFile rFile) throws SystemException, TException {
-		// TODO Auto-generated method stub
+		System.out.println("In the writting File function");
+		RFileMetadata clientMeta = rFile.getMeta();
+		String clientContent = rFile.getContent();
+		String clientMetahash = clientMeta.getContentHash();
+		String clientMetaFilename = clientMeta.getFilename();
+		String clientMetaOwner = clientMeta.getOwner();
+		int clientMetaVersion = clientMeta.getVersion();
+		// Check if file is present already.
+		File clientReqFile = new File(clientMetaFilename);
+		if (clientReqFile.exists() && !clientReqFile.isDirectory()) {
+			// TODO check for the permission
+			// But with what ????????? time to create file first.
+		} else {
+			// create File and its metadata.
+			// https://stackoverflow.com/questions/2885173/how-do-i-create-a-file-and-write-to-it-in-java
+			try (Writer writer = new BufferedWriter(
+					new OutputStreamWriter(new FileOutputStream(clientMetaFilename), "utf-8"))) {
+				writer.write(clientContent);
+				RFile localRfile = new RFile();
+				localRfile.setContent(clientContent);
+				RFileMetadata localMeta = new RFileMetadata();
+				// localMeta.setContentHash(sha(clientContent));
+				localMeta.setFilename(clientMetaFilename);
+				localMeta.setOwner(clientMetaOwner); // Is this the client or server probably Client
+				localMeta.setVersion(0);
+				localRfile.setMeta(localMeta);
+				FilesInfo.put(clientMetaFilename, localRfile);
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	@Override
@@ -166,6 +209,7 @@ public class MHandler implements Iface {
 		System.out.println("Calling NEXT RPC : " + targetNode.getPort() + "FROM : " + currentPort);
 		if (currentPort == targetNode.getPort()) {
 			try {
+				//TODO have to refine this code.
 				SystemException exception = new SystemException();
 				exception.setMessage("Calling same port again, Last entry is same as current node.Infinit loop");
 				// System.exit(0);
