@@ -36,16 +36,8 @@ public class JavaServer {
 					simple1(FSProcessor);
 				}
 			};
-			/*
-			 * Runnable secure = new Runnable() { public void run() { secure(processor); }
-			 * };
-			 */
 			new Thread(simple).start();
-			// new Thread(secure).start();
-
-		} catch (
-
-		Exception x) {
+		} catch (Exception x) {
 			x.printStackTrace();
 		}
 
@@ -55,11 +47,6 @@ public class JavaServer {
 		try {
 			TServerTransport serverTransport = new TServerSocket(port);
 			TServer server = new TSimpleServer(new Args(serverTransport).processor(FSProcessor));
-
-			// Use this for a multithreaded server
-			// TServer server = new TThreadPoolServer(new
-			// TThreadPoolServer.Args(serverTransport).processor(processor));
-
 			System.out.println("Starting the simple server...");
 			server.serve();
 

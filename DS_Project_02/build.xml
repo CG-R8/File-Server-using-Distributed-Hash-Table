@@ -59,14 +59,14 @@
 		<property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
 		<antcall target="build"/>
 	</target>
-	<target name="JavaServer_thrift9090">
+	<target name="JavaServer_thrift9091">
 		<java classname="JavaServer" failonerror="true" fork="yes">
 			<classpath refid="DS_Project_02.classpath"/>
 			<!--        	<arg value="${arg0}"/> -->
 			<arg value="9091"/>
 		</java>
 	</target>
-	<target name="JavaServer_thrift9091">
+	<target name="JavaServer_thrift9093">
 		<java classname="JavaServer" failonerror="true" fork="yes">
 			<classpath refid="DS_Project_02.classpath"/>
 			<!--        	<arg value="${arg0}"/> -->
@@ -80,11 +80,16 @@
 			<arg value="9092"/>
 		</java>
 	</target>
-	<target name="JavaServer_thrift9093">
+	<target name="JavaServer_thrift9094">
 		<java classname="JavaServer" failonerror="true" fork="yes">
 			<classpath refid="DS_Project_02.classpath"/>
 			<!--        	<arg value="${arg0}"/> -->
 			<arg value="9094"/>
 		</java>
 	</target>
+    <target name="JavaClient">
+        <java classname="JavaClient" failonerror="true" fork="yes">
+            <classpath refid="DS_Project_02.classpath"/>
+        </java>
+    </target>
 </project>
