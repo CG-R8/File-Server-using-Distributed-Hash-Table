@@ -42,6 +42,7 @@ public class JavaClient {
 		String keyString = user + ":" + filename;
 		String key = sha_256(keyString);
 		key = "B9836ED79978A750B8D0F3F55A822B504BF0E666F9FCABCE66CD7F038E7CA94F";
+		key = "0000000000000000000000000000000000000000000000000000000000000000";
 		key = key.toLowerCase();
 		NodeID succNode = client.findSucc(key);
 		System.out.println("=======================================================");

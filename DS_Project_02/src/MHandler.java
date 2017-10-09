@@ -199,60 +199,72 @@ public class MHandler implements Iface {
 	}
 
 	private boolean compareIDs_FirstNode(NodeID n_dash, String key) {
-		NodeID n_dash_successor = new NodeID();
-		n_dash_successor = node_ID_list.get(0);
-		System.out.println("-------------------[n_dash < Key > n_dash_successor]--------------");
-		System.out.print(n_dash.id + ":" + n_dash.port);
-		System.out.print(" < ");
-		System.out.print(key);
-		System.out.print(" > ");
-		System.out.println(n_dash_successor.id + ":" + n_dash_successor.port);
-		System.out.println("------------------------------------------------------------------");
-		String first = n_dash.id;
-		String second = key;
-		String third = n_dash_successor.id;
-		int left = (first.compareTo(second));
-		int right = second.compareTo(third);
-		int extreme = first.compareTo(third);
-		String zero="0000000000000000000000000000000000000000000000000000000000000000";
-		if (extreme > 0)
-			if(zero.compareTo(second)<0  &&  (right < 0))
-			{//1
-				return ((left > 0) && (right < 0));
-			}else//29
-			return ((left < 0) && (right > 0));
-		else if (extreme < 0)
-			return ((left < 0) && (right < 0));
-		else
-			return true;
+		try {
+			NodeID n_dash_successor = new NodeID();
+			n_dash_successor = node_ID_list.get(0);
+			System.out.println("-------------------[n_dash < Key > n_dash_successor]--------------");
+			System.out.print(n_dash.id + ":" + n_dash.port);
+			System.out.print(" < ");
+			System.out.print(key);
+			System.out.print(" > ");
+			System.out.println(n_dash_successor.id + ":" + n_dash_successor.port);
+			System.out.println("------------------------------------------------------------------");
+			String first = n_dash.id;
+			String second = key;
+			String third = n_dash_successor.id;
+			int left = (first.compareTo(second));
+			int right = second.compareTo(third);
+			int extreme = first.compareTo(third);
+			String zero="0000000000000000000000000000000000000000000000000000000000000000";
+			if (extreme > 0)
+				if(zero.compareTo(second)<=0  &&  (right < 0))
+				{//1
+					return ((left > 0) && (right < 0));
+				}else//29
+				return ((left < 0) && (right > 0));
+			else if (extreme < 0)
+				return ((left < 0) && (right < 0));
+			else
+				return true;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return true;
 	}
 
 	private boolean compareIDs(NodeID iteratorNode, String key, NodeID n_dash) {
-		System.out.println("-------------------[NODE_ID < IteratorNode > KEY]------------------");
-		System.out.print(n_dash.id + ":" + n_dash.port);
-		System.out.print(" < ");
-		System.out.print(iteratorNode.id + ":" + iteratorNode.port);
-		System.out.print(" > ");
-		System.out.println(key);
-		System.out.println("------------------------------------------------------------------");
-		String first = n_dash.id;
-		String second = iteratorNode.id;
-		String third = key;
-		//TODO have to write equality condition too
-		int left = (first.compareTo(second));
-		int right = second.compareTo(third);
-		int extreme = first.compareTo(third);
-		String zero="0000000000000000000000000000000000000000000000000000000000000000";
-		if (extreme > 0)
-			if(zero.compareTo(second)<0  &&  (right < 0))
-			{//1
-				return ((left > 0) && (right < 0));
-			}else//29
-			return ((left < 0) && (right > 0));
-		else if (extreme < 0)
-			return ((left < 0) && (right < 0));
-		else
-			return true;
+		try {
+			System.out.println("-------------------[NODE_ID < IteratorNode > KEY]------------------");
+			System.out.print(n_dash.id + ":" + n_dash.port);
+			System.out.print(" < ");
+			System.out.print(iteratorNode.id + ":" + iteratorNode.port);
+			System.out.print(" > ");
+			System.out.println(key);
+			System.out.println("------------------------------------------------------------------");
+			String first = n_dash.id;
+			String second = iteratorNode.id;
+			String third = key;
+			//TODO have to write equality condition too
+			int left = (first.compareTo(second));
+			int right = second.compareTo(third);
+			int extreme = first.compareTo(third);
+			String zero="0000000000000000000000000000000000000000000000000000000000000000";
+			if (extreme > 0)
+				if(zero.compareTo(second)<=0  &&  (right < 0))
+				{//1
+					return ((left > 0) && (right < 0));
+				}else//29
+				return ((left < 0) && (right > 0));
+			else if (extreme < 0)
+				return ((left < 0) && (right < 0));
+			else
+				return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return true;
+
 	}
 
 	public String sha_256(String currentID) {
