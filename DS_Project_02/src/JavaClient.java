@@ -35,10 +35,48 @@ public class JavaClient {
 			FileStore.Client client = new FileStore.Client(protocol);
 //			perform(client);
 			write(client);
+			read(client);
 			transport.close();
 		} catch (TException x) {
 			x.printStackTrace();
 		}
+	}
+
+	private static void read(Client client) throws SystemException, TException {
+
+		
+		String key = "B9836ED79978A750B8D0F3F55A822B504BF0E666F9FCABCE66CD7F038E7CA94F";
+		key = key.toLowerCase();
+
+		NodeID succNode = client.findSucc(key);
+		String predIP = succNode.ip;
+//		predIP = "127.0.0.1";
+		int predPort = succNode.port;
+
+		try {
+			TSocket transport = new TSocket(predIP, predPort);
+			transport.open();
+			TBinaryProtocol protocol = new TBinaryProtocol(transport);
+			chord_auto_generated.FileStore.Client client1 = new chord_auto_generated.FileStore.Client(protocol);
+			System.out.println("Reading file location : "+predPort);
+			
+			RFile rFile = new RFile();
+
+			rFile=client1.readFile("Example.txt","chetan");
+			
+			System.out.println(rFile.getContent());
+			System.out.println(rFile.getMeta().getVersion());
+			System.out.println(rFile.getMeta().getContentHash());
+			
+			System.out.println("Reading file Done----------");
+
+			transport.close();
+		} catch (TTransportException e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
+		
+			
 	}
 
 	private static void perform(FileStore.Client client) throws TException {

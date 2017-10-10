@@ -51,6 +51,8 @@ public class MHandler implements Iface {
 		if (clientReqFile.exists() && !clientReqFile.isDirectory()) {
 			System.out.println("Writing in existing File: " + clientContent);
 			// TODO check for the permission
+			if (FilesInfo.containsKey(clientMetaFilename)) 
+			{
 			if (FilesInfo.get(clientMetaFilename).getMeta().getOwner().equals(clientMetaOwner)) {
 				// We got owner of file.
 				System.out.println("Got correct owner-----");
@@ -64,6 +66,7 @@ public class MHandler implements Iface {
 					localMeta.setVersion(clientMetaVersion++);
 					localRfile.setMeta(localMeta);
 					FilesInfo.putIfAbsent(clientMetaFilename, localRfile);
+					printRfile(localRfile);
 				} catch (UnsupportedEncodingException e) {
 					e.printStackTrace();
 				} catch (FileNotFoundException e) {
@@ -73,6 +76,10 @@ public class MHandler implements Iface {
 				}
 			} else {
 				System.out.println("Incorrect owner want to write in file");
+			}
+			}else
+			{
+				System.out.println("Server have file but can not have metaInfo of file");
 			}
 		} else {
 			System.out.println("Writing in NEW File: " + clientContent);
@@ -89,6 +96,7 @@ public class MHandler implements Iface {
 				localMeta.setOwner(clientMetaOwner); // Is this the client or server probably Client
 				localMeta.setVersion(0);
 				localRfile.setMeta(localMeta);
+				printRfile(localRfile);
 				FilesInfo.put(clientMetaFilename, localRfile);
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
@@ -98,6 +106,15 @@ public class MHandler implements Iface {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private void printRfile(RFile localRfile) {
+		System.out.println("**********************************************************");
+		System.out.println(localRfile.getContent());
+		System.out.println(localRfile.getMeta());
+		System.out.println("**********************************************************");
+
+		
 	}
 
 	@Override
@@ -137,32 +154,6 @@ public class MHandler implements Iface {
 			 exception.setMessage("File do not exist on server"); 
 			 throw exception;
 		}
-		/*
-		 * 
-		 * SystemException exception=null; RFile rFile=null; String[] name=
-		 * filename.split("\\."); String key = name[0];
-		 * if(!(fileStorage.containsKey(key))){ exception= new SystemException();
-		 * exception.setMessage("File not found. Please enter valid file name"); throw
-		 * exception; } else{ rFile = fileStorage.get(key); RFileMetadata metadata=
-		 * rFile.getMeta(); if(metadata.getOwner().equals(owner)){
-		 * if(metadata.getDeleted()==0){ return rFile; } else{ exception= new
-		 * SystemException(); exception.setMessage("This file is deleted"); throw
-		 * exception; }
-		 * 
-		 * } else{ exception= new SystemException();
-		 * exception.setMessage("This file is not owned by the specified owner"); throw
-		 * exception; } }
-		 * 
-		 * 
-		} else {
-			System.out.println("File do not exist on server");
-		}
-		/*
-		 * 
-		 * SystemException exception=null; RFile rFile=null; String[] name=
-		 * filename.split("\\."); String key = name[0];
-		 * if(!(fileStorage.containsKe
-		 */
 		return localRfile;
 	}
 
