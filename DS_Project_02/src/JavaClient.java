@@ -6,9 +6,14 @@ import java.util.Base64;
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TSSLTransportFactory;
 import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.TTransportException;
 
 import chord_auto_generated.FileStore;
 import chord_auto_generated.NodeID;
+import chord_auto_generated.RFile;
+import chord_auto_generated.RFileMetadata;
+import chord_auto_generated.SystemException;
+import chord_auto_generated.FileStore.Client;
 
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TSSLTransportFactory.TSSLTransportParameters;
@@ -28,7 +33,8 @@ public class JavaClient {
 			transport.open();
 			TProtocol protocol = new TBinaryProtocol(transport);
 			FileStore.Client client = new FileStore.Client(protocol);
-			perform(client);
+//			perform(client);
+			write(client);
 			transport.close();
 		} catch (TException x) {
 			x.printStackTrace();
@@ -49,6 +55,44 @@ public class JavaClient {
 		System.out.println("KEY : " + key);
 		System.out.println("=======================================================");
 		System.out.println("Node ID : " + succNode.id + ": NODE IP : " + succNode.ip + "NODE PORT : " + succNode.port);
+	}
+	
+	private static void write(Client client) throws SystemException, TException {
+		
+		String key = "B9836ED79978A750B8D0F3F55A822B504BF0E666F9FCABCE66CD7F038E7CA94F";
+		key = key.toLowerCase();
+
+		NodeID succNode = client.findSucc(key);
+		String predIP = succNode.ip;
+//		predIP = "127.0.0.1";
+		int predPort = succNode.port;
+
+		try {
+			TSocket transport = new TSocket(predIP, predPort);
+			transport.open();
+			TBinaryProtocol protocol = new TBinaryProtocol(transport);
+			chord_auto_generated.FileStore.Client client1 = new chord_auto_generated.FileStore.Client(protocol);
+			System.out.println("Writting file location : "+predPort);
+			
+			RFile rFile = new RFile();
+			
+//			rFile.setContent("This is the NEW file created ");
+			rFile.setContent("More Updated Files content");
+
+			RFileMetadata localMeta = new RFileMetadata();
+			localMeta.setFilename("Example.txt");
+			localMeta.setOwner("chetan"); // Is this the client or server probably Client
+			localMeta.setVersion(0);
+			rFile.setMeta(localMeta );
+			client1.writeFile(rFile);
+			System.out.println("Writting file Done----------");
+
+			transport.close();
+		} catch (TTransportException e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
+		
 	}
 
 	public static String sha_256(String currentID) {

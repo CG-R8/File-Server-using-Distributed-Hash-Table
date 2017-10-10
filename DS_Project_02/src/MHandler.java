@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -12,10 +14,12 @@ import chord_auto_generated.RFile;
 import chord_auto_generated.RFileMetadata;
 import chord_auto_generated.SystemException;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
@@ -31,6 +35,7 @@ public class MHandler implements Iface {
 	public int currentPort;
 	private NodeID currentNode = null;
 	private static List<NodeID> node_ID_list;
+	HashMap<String, RFile> FilesInfo = new HashMap<String, RFile>();
 
 	@Override
 	public void writeFile(RFile rFile) throws SystemException, TException {
@@ -44,9 +49,33 @@ public class MHandler implements Iface {
 		// Check if file is present already.
 		File clientReqFile = new File(clientMetaFilename);
 		if (clientReqFile.exists() && !clientReqFile.isDirectory()) {
+			System.out.println("Writing in existing File: " + clientContent);
 			// TODO check for the permission
-			// But with what ????????? time to create file first.
+			if (FilesInfo.get(clientMetaFilename).getMeta().getOwner().equals(clientMetaOwner)) {
+				// We got owner of file.
+				System.out.println("Got correct owner-----");
+				try (Writer writer = new BufferedWriter(
+						new OutputStreamWriter(new FileOutputStream(clientMetaFilename), "utf-8"))) {
+					writer.write(clientContent);
+					RFile localRfile = new RFile();
+					localRfile.setContent(clientContent);
+					RFileMetadata localMeta = new RFileMetadata();
+					localMeta.setContentHash(sha_256(clientContent));
+					localMeta.setVersion(clientMetaVersion++);
+					localRfile.setMeta(localMeta);
+					FilesInfo.putIfAbsent(clientMetaFilename, localRfile);
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else {
+				System.out.println("Incorrect owner want to write in file");
+			}
 		} else {
+			System.out.println("Writing in NEW File: " + clientContent);
 			// create File and its metadata.
 			// https://stackoverflow.com/questions/2885173/how-do-i-create-a-file-and-write-to-it-in-java
 			try (Writer writer = new BufferedWriter(
@@ -55,7 +84,7 @@ public class MHandler implements Iface {
 				RFile localRfile = new RFile();
 				localRfile.setContent(clientContent);
 				RFileMetadata localMeta = new RFileMetadata();
-				// localMeta.setContentHash(sha(clientContent));
+				localMeta.setContentHash(sha_256(clientContent));
 				localMeta.setFilename(clientMetaFilename);
 				localMeta.setOwner(clientMetaOwner); // Is this the client or server probably Client
 				localMeta.setVersion(0);
@@ -73,8 +102,68 @@ public class MHandler implements Iface {
 
 	@Override
 	public RFile readFile(String filename, String owner) throws SystemException, TException {
-		// TODO Auto-generated method stub
-		return null;
+		SystemException exception=null;
+		RFile localRfile = new RFile();
+		File clientReqFile = new File(filename);
+		localRfile.content = "";
+		if (clientReqFile.exists() && !clientReqFile.isDirectory()) {
+			if (FilesInfo.get(filename).getMeta().getOwner().equals(owner)) {
+				System.out.println("Got correct owner to read File-----");
+				localRfile=FilesInfo.get(filename);
+				
+				BufferedReader br = null;
+				try {
+					br = new BufferedReader(new FileReader(filename));
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
+				String singleline="";
+				try {
+					while ((singleline = br.readLine()) != null) {
+						localRfile.content=localRfile.content+singleline;
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
+			} else {
+				 exception= new SystemException();
+				 exception.setMessage("Incorrect owner want to read file"); 
+				 throw exception;
+			}
+		} else {
+			System.out.println("File do not exist on server");
+			 exception= new SystemException();
+			 exception.setMessage("File do not exist on server"); 
+			 throw exception;
+		}
+		/*
+		 * 
+		 * SystemException exception=null; RFile rFile=null; String[] name=
+		 * filename.split("\\."); String key = name[0];
+		 * if(!(fileStorage.containsKey(key))){ exception= new SystemException();
+		 * exception.setMessage("File not found. Please enter valid file name"); throw
+		 * exception; } else{ rFile = fileStorage.get(key); RFileMetadata metadata=
+		 * rFile.getMeta(); if(metadata.getOwner().equals(owner)){
+		 * if(metadata.getDeleted()==0){ return rFile; } else{ exception= new
+		 * SystemException(); exception.setMessage("This file is deleted"); throw
+		 * exception; }
+		 * 
+		 * } else{ exception= new SystemException();
+		 * exception.setMessage("This file is not owned by the specified owner"); throw
+		 * exception; } }
+		 * 
+		 * 
+		} else {
+			System.out.println("File do not exist on server");
+		}
+		/*
+		 * 
+		 * SystemException exception=null; RFile rFile=null; String[] name=
+		 * filename.split("\\."); String key = name[0];
+		 * if(!(fileStorage.containsKe
+		 */
+		return localRfile;
 	}
 
 	@Override
@@ -134,18 +223,15 @@ public class MHandler implements Iface {
 	@Override
 	public NodeID findPred(String key) throws SystemException, TException {
 		System.out.println("In the Find Pred");
-		int counter = 0;
 		NodeID n_dash = new NodeID();
 		boolean isRPC_Done = false;
 		try {
 			n_dash = getCurrentNode();
-			while ((!compareIDs_FirstNode(n_dash, key)) && counter < 5) {
-				System.out.print(counter + " : ");
+			while ((!compareIDs_FirstNode(n_dash, key))) {
 				n_dash = closest_preceding_fing(n_dash, key);
 				System.out.println("First HOP is here : " + n_dash.getPort());
 				n_dash = nextRpcCall(n_dash, key);
 				isRPC_Done = true;
-				counter++;
 				break;
 			}
 		} catch (Exception e) {
@@ -203,13 +289,13 @@ public class MHandler implements Iface {
 		return this.node_ID_list.get(0);
 	}
 
-	private NodeID nextRpcCall(NodeID targetNode, String key) throws SystemException, TException {
+	private NodeID nextRpcCall(NodeID nextHop, String key) throws SystemException, TException {
 		NodeID predNode = new NodeID();
 		currentPort = JavaServer.port;
-		System.out.println("Calling NEXT RPC : " + targetNode.getPort() + "FROM : " + currentPort);
-		if (currentPort == targetNode.getPort()) {
+		System.out.println("Calling NEXT RPC : " + nextHop.getPort() + "FROM : " + currentPort);
+		if (nextHop.getPort() == currentPort) {
 			try {
-				//TODO have to refine this code.
+				// TODO have to refine this code.
 				SystemException exception = new SystemException();
 				exception.setMessage("Calling same port again, Last entry is same as current node.Infinit loop");
 				// System.exit(0);
@@ -218,8 +304,8 @@ public class MHandler implements Iface {
 				e.printStackTrace();
 			}
 		}
-		String host = targetNode.getIp();
-		int port = targetNode.getPort();
+		String host = nextHop.getIp();
+		int port = nextHop.getPort();
 		System.out.println("HOST : " + host + " PORT: " + port);
 		try {
 			TSocket transport = new TSocket(host, port);
@@ -259,13 +345,12 @@ public class MHandler implements Iface {
 			int left = (first.compareTo(second));
 			int right = second.compareTo(third);
 			int extreme = first.compareTo(third);
-			String zero="0000000000000000000000000000000000000000000000000000000000000000";
+			String zero = "0000000000000000000000000000000000000000000000000000000000000000";
 			if (extreme > 0)
-				if(zero.compareTo(second)<=0  &&  (right < 0))
-				{//1
+				if (zero.compareTo(second) <= 0 && (right < 0)) {// 1
 					return ((left > 0) && (right < 0));
-				}else//29
-				return ((left < 0) && (right > 0));
+				} else// 29
+					return ((left < 0) && (right > 0));
 			else if (extreme < 0)
 				return ((left < 0) && (right < 0));
 			else
@@ -289,17 +374,16 @@ public class MHandler implements Iface {
 			String first = n_dash.id;
 			String second = iteratorNode.id;
 			String third = key;
-			//TODO have to write equality condition too
+			// TODO have to write equality condition too
 			int left = (first.compareTo(second));
 			int right = second.compareTo(third);
 			int extreme = first.compareTo(third);
-			String zero="0000000000000000000000000000000000000000000000000000000000000000";
+			String zero = "0000000000000000000000000000000000000000000000000000000000000000";
 			if (extreme > 0)
-				if(zero.compareTo(second)<=0  &&  (right < 0))
-				{//1
+				if (zero.compareTo(second) <= 0 && (right < 0)) {// 1
 					return ((left > 0) && (right < 0));
-				}else//29
-				return ((left < 0) && (right > 0));
+				} else// 29
+					return ((left < 0) && (right > 0));
 			else if (extreme < 0)
 				return ((left < 0) && (right < 0));
 			else
@@ -308,7 +392,6 @@ public class MHandler implements Iface {
 			e.printStackTrace();
 		}
 		return true;
-
 	}
 
 	public String sha_256(String currentID) {
