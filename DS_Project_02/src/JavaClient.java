@@ -45,8 +45,13 @@ public class JavaClient {
 	private static void read(Client client) throws SystemException, TException {
 
 		
-		String key = "B9836ED79978A750B8D0F3F55A822B504BF0E666F9FCABCE66CD7F038E7CA94F";
-		key = key.toLowerCase();
+//		String key = "B9836ED79978A750B8D0F3F55A822B504BF0E666F9FCABCE66CD7F038E7CA94F";
+//		key = key.toLowerCase();
+		
+		String user = "chetan";
+		String filename = "exmaple.txt";
+		String keyString = user + ":" + filename;
+		String key = sha_256(keyString);
 
 		NodeID succNode = client.findSucc(key);
 		String predIP = succNode.ip;
@@ -62,7 +67,7 @@ public class JavaClient {
 			
 			RFile rFile = new RFile();
 
-			rFile=client1.readFile("Example.txt","chetan");
+			rFile=client1.readFile("Example1.txt","chetan");
 			
 			System.out.println(rFile.getContent());
 			System.out.println(rFile.getMeta().getVersion());
@@ -86,7 +91,7 @@ public class JavaClient {
 		String keyString = user + ":" + filename;
 		String key = sha_256(keyString);
 		key = "B9836ED79978A750B8D0F3F55A822B504BF0E666F9FCABCE66CD7F038E7CA94F";
-		key = "0000000000000000000000000000000000000000000000000000000000000000";
+//		key = "0000000000000000000000000000000000000000000000000000000000000000";
 		key = key.toLowerCase();
 		NodeID succNode = client.findSucc(key);
 		System.out.println("=======================================================");
@@ -97,9 +102,14 @@ public class JavaClient {
 	
 	private static void write(Client client) throws SystemException, TException {
 		
-		String key = "B9836ED79978A750B8D0F3F55A822B504BF0E666F9FCABCE66CD7F038E7CA94F";
-		key = key.toLowerCase();
+//		String key = "B9836ED79978A750B8D0F3F55A822B504BF0E666F9FCABCE66CD7F038E7CA94F";
+//		key = key.toLowerCase();
 
+		String user = "chetan";
+		String filename = "exmaple.txt";
+		String keyString = user + ":" + filename;
+		String key = sha_256(keyString);
+		System.out.println("KEY : "+key);
 		NodeID succNode = client.findSucc(key);
 		String predIP = succNode.ip;
 //		predIP = "127.0.0.1";
@@ -115,12 +125,13 @@ public class JavaClient {
 			RFile rFile = new RFile();
 			
 //			rFile.setContent("More Updated Files content");
-			rFile.setContent("22222222222222222222222");
+			rFile.setContent("0000000000000000000000000");
 
 			RFileMetadata localMeta = new RFileMetadata();
-			localMeta.setFilename("Example1.txt");
+			localMeta.setFilename("exmaple.txt");
 			localMeta.setOwner("chetan"); // Is this the client or server probably Client
 			rFile.setMeta(localMeta );
+			System.out.println("******----------");
 			client1.writeFile(rFile);
 			System.out.println("Writting file Done----------");
 
@@ -133,14 +144,19 @@ public class JavaClient {
 	}
 
 	public static String sha_256(String currentID) {
-		MessageDigest digest = null;
-		try {
-			digest = MessageDigest.getInstance("SHA-256");
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		byte[] hash = digest.digest(currentID.getBytes(StandardCharsets.UTF_8));
-		String encoded = Base64.getEncoder().encodeToString(hash);
-    return encoded;}
+	    try{
+	        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+	        byte[] hash = digest.digest(currentID.getBytes("UTF-8"));
+	        StringBuffer hexString = new StringBuffer();
+
+	        for (int i = 0; i < hash.length; i++) {
+	            String hex = Integer.toHexString(0xff & hash[i]);
+	            if(hex.length() == 1) hexString.append('0');
+	            hexString.append(hex);
+	        }
+	        return hexString.toString();
+	    } catch(Exception ex){
+	       throw new RuntimeException(ex);
+	    }
+	}
 }
