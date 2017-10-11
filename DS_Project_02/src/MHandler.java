@@ -31,8 +31,8 @@ import java.security.NoSuchAlgorithmException;
 
 public class MHandler implements Iface {
 	public int currentPort;
-	private static List<NodeID> node_ID_list;
-	HashMap<String, RFile> FilesInfo = new HashMap<String, RFile>();
+	private List<NodeID> node_ID_list;
+	public static HashMap<String, RFile> FilesInfo = new HashMap<String, RFile>();
 
 	@Override
 	public void writeFile(RFile rFile) throws SystemException, TException {
@@ -70,11 +70,15 @@ public class MHandler implements Iface {
 					e.printStackTrace();
 				}
 			} else {
-				System.out.println("Incorrect owner want to write in file");
+				SystemException exception = new SystemException();
+				 exception.setMessage("Incorrect owner want to write in file"); 
+				 throw exception;
 			}
 			}else
 			{
-				System.out.println("Server have file but can not have metaInfo of file");
+				SystemException exception = new SystemException();
+				 exception.setMessage("Server have file but can not have metaInfo of file"); 
+				 throw exception;
 			}
 		} else {
 			System.out.println("Writing in NEW File: " + clientContent);
@@ -155,11 +159,29 @@ public class MHandler implements Iface {
 	public void setFingertable(List<NodeID> node_list) throws TException {
 		System.out.println("Set Finger table");
 		System.out.println(node_list);
+		if(node_list.isEmpty()) {
+			SystemException exception = new SystemException();
+			 exception.setMessage("Incorrect owner want to read file"); 
+			 throw exception;
+		}
+			
 		node_ID_list = node_list;
 	}
 
 	@Override
 	public NodeID findSucc(String key) throws SystemException, TException {
+		
+		if (node_ID_list.isEmpty()) {
+			try {
+				SystemException exception = new SystemException();;
+				exception.setMessage("Finger table is Empty Please restart server");
+				 System.exit(0);
+				throw exception;
+			} catch (SystemException e) {
+				e.printStackTrace();
+			}
+		}
+		
 		System.out.println("In the Find Succ");
 		NodeID n_dash = new NodeID();
 		currentPort = JavaServer.port;
@@ -173,24 +195,38 @@ public class MHandler implements Iface {
 		String predIP = n_dash.ip;
 		int predPort = n_dash.port;
 		NodeID succNode = new NodeID();
-		try {
-			TSocket transport = new TSocket(predIP, predPort);
-			transport.open();
-			TBinaryProtocol protocol = new TBinaryProtocol(transport);
-			chord_auto_generated.FileStore.Client client = new chord_auto_generated.FileStore.Client(protocol);
-			try {
 				System.out.println("Geting the succ. from found pred");
-				succNode = client.getNodeSucc();
-			} catch (SystemException e) {
-				e.printStackTrace();
-			} catch (TException e) {
-				e.printStackTrace();
-			}
-			transport.close();
-		} catch (TTransportException e) {
-			e.printStackTrace();
-			System.exit(0);
-		}
+				
+				
+				try {
+					if(getCurrentNode().equals(n_dash))
+					{
+						System.out.println("Get the successor from the same node");
+						succNode=getNodeSucc();
+					}else
+					{
+						System.out.println("Make Rpc Call");
+						try {
+							TSocket transport = new TSocket(predIP, predPort);
+							transport.open();
+							TBinaryProtocol protocol = new TBinaryProtocol(transport);
+							chord_auto_generated.FileStore.Client client = new chord_auto_generated.FileStore.Client(protocol);
+							try {
+								succNode = client.getNodeSucc();
+							} catch (SystemException e) {
+								e.printStackTrace();
+							} catch (TException e) {
+								e.printStackTrace();
+							}
+							transport.close();
+						} catch (TTransportException e) {
+							e.printStackTrace();
+							System.exit(0);
+						}
+					}
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+				}
 		System.out.println("Node ID : " + succNode.id + ": NODE IP : " + succNode.ip + "NODE PORT : " + succNode.port);
 		return succNode;
 	}
@@ -210,7 +246,7 @@ public class MHandler implements Iface {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		System.out.println("FOUND: " + n_dash.id + " Port:" + n_dash.port);
+		System.out.println("RETURN FOUND: " + n_dash.id + " Port:" + n_dash.port);
 		return n_dash;
 	}
 
@@ -256,7 +292,7 @@ public class MHandler implements Iface {
 				e.printStackTrace();
 			}
 		}
-		return this.node_ID_list.get(0);
+		return node_ID_list.get(0);
 	}
 
 	private NodeID rpcToNextHop(NodeID nextHop, String key) throws SystemException, TException {
@@ -273,11 +309,8 @@ public class MHandler implements Iface {
 				e.printStackTrace();
 			}
 		}
-		String host = nextHop.getIp();
-		int port = nextHop.getPort();
-		System.out.println("HOST : " + host + " PORT: " + port);
 		try {
-			TSocket transport = new TSocket(host, port);
+			TSocket transport = new TSocket(nextHop.getIp(), nextHop.getPort());
 			transport.open();
 			TBinaryProtocol protocol = new TBinaryProtocol(transport);
 			chord_auto_generated.FileStore.Client client = new chord_auto_generated.FileStore.Client(protocol);
@@ -303,7 +336,9 @@ public class MHandler implements Iface {
 			try {
 				n_dash_successor = node_ID_list.get(0);
 			} catch (Exception e) {
-				e.printStackTrace();
+				SystemException exception = new SystemException();
+				 exception.setMessage("Please restart the initialisation of finger tables process and server"); 
+				 throw exception;
 			} 
 			System.out.println("-------------------[n_dash < Key > n_dash_successor]--------------");
 			System.out.print(n_dash.id + ":" + n_dash.port);
@@ -367,13 +402,19 @@ public class MHandler implements Iface {
 	}
 //Ref: https://stackoverflow.com/questions/5531455/how-to-hash-some-string-with-sha256-in-java
 	public String sha_256(String currentID) {
-		MessageDigest digest = null;
-		try {
-			digest = MessageDigest.getInstance("SHA-256");
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-		byte[] hash = digest.digest(currentID.getBytes(StandardCharsets.UTF_8));
-		String encoded = Base64.getEncoder().encodeToString(hash);
-    return encoded;}
+	    try{
+	        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+	        byte[] hash = digest.digest(currentID.getBytes("UTF-8"));
+	        StringBuffer hexString = new StringBuffer();
+
+	        for (int i = 0; i < hash.length; i++) {
+	            String hex = Integer.toHexString(0xff & hash[i]);
+	            if(hex.length() == 1) hexString.append('0');
+	            hexString.append(hex);
+	        }
+	        return hexString.toString();
+	    } catch(Exception ex){
+	       throw new RuntimeException(ex);
+	    }
+	}
 }

@@ -22,20 +22,16 @@ import org.apache.thrift.protocol.TProtocol;
 
 public class JavaClient {
 	public static void main(String[] args) {
-		// if (args.length != 3) {
-		// System.out.println("Please enter simple/secure [ip] [port]");
-		// System.exit(0);
-		// }
 		try {
 			TTransport transport;
 			// transport = new TSocket("simple", Integer.valueOf("9091"));
-			transport = new TSocket("localhost", 9091);
+			transport = new TSocket("localhost", 9092);
 			transport.open();
 			TProtocol protocol = new TBinaryProtocol(transport);
 			FileStore.Client client = new FileStore.Client(protocol);
-//			perform(client);
-			write(client);
-//			read(client);
+			// perform(client);
+//			write(client);
+			 read(client);
 			transport.close();
 		} catch (TException x) {
 			x.printStackTrace();
@@ -43,8 +39,6 @@ public class JavaClient {
 	}
 
 	private static void read(Client client) throws SystemException, TException {
-
-		
 //		String key = "B9836ED79978A750B8D0F3F55A822B504BF0E666F9FCABCE66CD7F038E7CA94F";
 //		key = key.toLowerCase();
 		
@@ -52,36 +46,29 @@ public class JavaClient {
 		String filename = "exmaple.txt";
 		String keyString = user + ":" + filename;
 		String key = sha_256(keyString);
-
+		
+		
 		NodeID succNode = client.findSucc(key);
 		String predIP = succNode.ip;
-//		predIP = "127.0.0.1";
+		// predIP = "127.0.0.1";
 		int predPort = succNode.port;
-
 		try {
 			TSocket transport = new TSocket(predIP, predPort);
 			transport.open();
 			TBinaryProtocol protocol = new TBinaryProtocol(transport);
 			chord_auto_generated.FileStore.Client client1 = new chord_auto_generated.FileStore.Client(protocol);
-			System.out.println("Reading file location : "+predPort);
-			
+			System.out.println("Reading file location : " + predPort);
 			RFile rFile = new RFile();
-
-			rFile=client1.readFile("Example1.txt","chetan");
-			
+			rFile = client1.readFile("Example1.txt", "chetan1");
 			System.out.println(rFile.getContent());
 			System.out.println(rFile.getMeta().getVersion());
 			System.out.println(rFile.getMeta().getContentHash());
-			
 			System.out.println("Reading file Done----------");
-
 			transport.close();
 		} catch (TTransportException e) {
 			e.printStackTrace();
 			System.exit(0);
 		}
-		
-			
 	}
 
 	private static void perform(FileStore.Client client) throws TException {
@@ -91,7 +78,7 @@ public class JavaClient {
 		String keyString = user + ":" + filename;
 		String key = sha_256(keyString);
 		key = "B9836ED79978A750B8D0F3F55A822B504BF0E666F9FCABCE66CD7F038E7CA94F";
-//		key = "0000000000000000000000000000000000000000000000000000000000000000";
+		key = "0000000000000000000000000000000000000000000000000000000000000000";
 		key = key.toLowerCase();
 		NodeID succNode = client.findSucc(key);
 		System.out.println("=======================================================");
@@ -99,48 +86,44 @@ public class JavaClient {
 		System.out.println("=======================================================");
 		System.out.println("Node ID : " + succNode.id + ": NODE IP : " + succNode.ip + "NODE PORT : " + succNode.port);
 	}
-	
+
 	private static void write(Client client) throws SystemException, TException {
-		
 //		String key = "B9836ED79978A750B8D0F3F55A822B504BF0E666F9FCABCE66CD7F038E7CA94F";
 //		key = key.toLowerCase();
-
+		
+		
 		String user = "chetan";
 		String filename = "exmaple.txt";
 		String keyString = user + ":" + filename;
 		String key = sha_256(keyString);
-		System.out.println("KEY : "+key);
+		
+		System.out.println("Client Locating server");
 		NodeID succNode = client.findSucc(key);
 		String predIP = succNode.ip;
-//		predIP = "127.0.0.1";
 		int predPort = succNode.port;
+		System.out.println("Client located server : "+predPort);
 
 		try {
 			TSocket transport = new TSocket(predIP, predPort);
 			transport.open();
 			TBinaryProtocol protocol = new TBinaryProtocol(transport);
-			chord_auto_generated.FileStore.Client client1 = new chord_auto_generated.FileStore.Client(protocol);
-			System.out.println("Writting file location : "+predPort);
-			
+			client = new chord_auto_generated.FileStore.Client(protocol);
+			System.out.println("Writting file location : " + predPort);
 			RFile rFile = new RFile();
-			
-//			rFile.setContent("More Updated Files content");
-			rFile.setContent("0000000000000000000000000");
-
+			// rFile.setContent("More Updated Files content");
+			rFile.setContent("22222222222222222222222");
 			RFileMetadata localMeta = new RFileMetadata();
-			localMeta.setFilename("exmaple.txt");
+			localMeta.setFilename("Example1.txt");
 			localMeta.setOwner("chetan"); // Is this the client or server probably Client
-			rFile.setMeta(localMeta );
-			System.out.println("******----------");
-			client1.writeFile(rFile);
+			rFile.setMeta(localMeta);
+			System.out.println("Writting file Starting----------");
+			client.writeFile(rFile);
 			System.out.println("Writting file Done----------");
-
 			transport.close();
 		} catch (TTransportException e) {
 			e.printStackTrace();
 			System.exit(0);
 		}
-		
 	}
 
 	public static String sha_256(String currentID) {
