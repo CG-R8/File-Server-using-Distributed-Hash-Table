@@ -25,7 +25,7 @@ public class JavaServer {
 	public static void main(String[] args) {
 		try {
 
-			mcHandler = new MHandler();
+			mcHandler = new MHandler(args[0]);
 			FSProcessor = new FileStore.Processor(mcHandler);
 			port = Integer.parseInt(args[0]);
 			System.out.println(":::port " + port);
@@ -43,27 +43,11 @@ public class JavaServer {
 
 	}
 
-	public static void simple(FileStore.Processor FSProcessor) {
-		try {
-			TServerTransport serverTransport = new TServerSocket(port);
-			TServer server = new TSimpleServer(new Args(serverTransport).processor(FSProcessor));
-			System.out.println("Starting the simple server...");
-			server.serve();
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 
 	public static void simple1(Processor fSProcessor2) {
 		try {
 			TServerTransport serverTransport = new TServerSocket(port);
 			TServer server = new TSimpleServer(new Args(serverTransport).processor(fSProcessor2));
-
-			// Use this for a multithreaded server
-			// TServer server = new TThreadPoolServer(new
-			// TThreadPoolServer.Args(serverTransport).processor(processor));
-
 			System.out.println("Starting the simple server...");
 			server.serve();
 		} catch (Exception e) {

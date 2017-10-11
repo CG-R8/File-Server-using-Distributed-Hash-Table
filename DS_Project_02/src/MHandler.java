@@ -34,6 +34,10 @@ public class MHandler implements Iface {
 	private List<NodeID> node_ID_list;
 	public static HashMap<String, RFile> FilesInfo = new HashMap<String, RFile>();
 
+	public MHandler(String string) {
+		currentPort=Integer.parseInt(string);
+	}
+
 	@Override
 	public void writeFile(RFile rFile) throws SystemException, TException {
 		System.out.println("In the writting File function");
@@ -157,8 +161,8 @@ public class MHandler implements Iface {
 
 	@Override
 	public void setFingertable(List<NodeID> node_list) throws TException {
-		System.out.println("Set Finger table");
-		System.out.println(node_list);
+		//System.out.println("Set Finger table");
+		//System.out.println(node_list);
 		if(node_list.isEmpty()) {
 			SystemException exception = new SystemException();
 			 exception.setMessage("Incorrect owner want to read file"); 
@@ -182,30 +186,30 @@ public class MHandler implements Iface {
 			}
 		}
 		
-		System.out.println("In the Find Succ");
+		//System.out.println("In the Find Succ");
 		NodeID n_dash = new NodeID();
-		currentPort = JavaServer.port;
-		System.out.println("Going to find Pred");
+//		currentPort = JavaServer.port;
+		//System.out.println("Going to find Pred");
 		try {
 			n_dash = findPred(key);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		System.out.println("Node ID : " + n_dash.id + ": NODE IP : " + n_dash.ip + "NODE PORT : " + n_dash.port);
+		//System.out.println("Node ID : " + n_dash.id + ": NODE IP : " + n_dash.ip + "NODE PORT : " + n_dash.port);
 		String predIP = n_dash.ip;
 		int predPort = n_dash.port;
 		NodeID succNode = new NodeID();
-				System.out.println("Geting the succ. from found pred");
+				//System.out.println("Geting the succ. from found pred");
 				
 				
 				try {
 					if(getCurrentNode().equals(n_dash))
 					{
-						System.out.println("Get the successor from the same node");
+						//System.out.println("Get the successor from the same node");
 						succNode=getNodeSucc();
 					}else
 					{
-						System.out.println("Make Rpc Call");
+						//System.out.println("Make Rpc Call");
 						try {
 							TSocket transport = new TSocket(predIP, predPort);
 							transport.open();
@@ -227,13 +231,13 @@ public class MHandler implements Iface {
 				} catch (UnknownHostException e) {
 					e.printStackTrace();
 				}
-		System.out.println("Node ID : " + succNode.id + ": NODE IP : " + succNode.ip + "NODE PORT : " + succNode.port);
+		//System.out.println("Node ID : " + succNode.id + ": NODE IP : " + succNode.ip + "NODE PORT : " + succNode.port);
 		return succNode;
 	}
 
 	@Override
 	public NodeID findPred(String key) throws SystemException, TException {
-		System.out.println("In the Find Pred");
+		//System.out.println("In the Find Pred");
 		NodeID n_dash = new NodeID();
 		try {
 			n_dash = getCurrentNode();
@@ -246,27 +250,27 @@ public class MHandler implements Iface {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		System.out.println("RETURN FOUND: " + n_dash.id + " Port:" + n_dash.port);
+		//System.out.println("RETURN FOUND: " + n_dash.id + " Port:" + n_dash.port);
 		return n_dash;
 	}
 
 	private NodeID getCurrentNode() throws UnknownHostException {
 		NodeID currentNode = new NodeID();
-		currentNode.port = JavaServer.port;
+		currentNode.port = currentPort;
 		// currentNode.ip=InetAddress.getLocalHost().getHostAddress();
 		// TODO change workaround for Ip address
 		currentNode.ip = "127.0.0.1";
 		String preHashingString = currentNode.ip + ":" + currentNode.port;
 		currentNode.id = sha_256(preHashingString);
-		System.out.println("CURRENT Node ID : " + currentNode.id + ": NODE IP : " + currentNode.ip + "NODE PORT : "
-				+ currentNode.port);
+		//System.out.println("CURRENT Node ID : " + currentNode.id + ": NODE IP : " + currentNode.ip + "NODE PORT : "
+			//	+ currentNode.port);
 		return currentNode;
 	}
 
 	public NodeID closest_preceding_fing(NodeID n_dash, String key) {
 		int m = 255, i = 0;
 		NodeID iteratorNode = new NodeID();
-		System.out.println("In the closest_preceding_fing");
+		//System.out.println("In the closest_preceding_fing");
 		try {
 			for (i = m; i >= 1; i--) {
 				iteratorNode = node_ID_list.get(i);
@@ -298,8 +302,8 @@ public class MHandler implements Iface {
 	private NodeID rpcToNextHop(NodeID nextHop, String key) throws SystemException, TException {
 		NodeID predNode = new NodeID();
 		SystemException exception = new SystemException();
-		currentPort = JavaServer.port;
-		System.out.println("Calling NEXT RPC : " + nextHop.getPort() + "FROM : " + currentPort);
+//		currentPort = JavaServer.port;
+		//System.out.println("Calling NEXT RPC : " + nextHop.getPort() + "FROM : " + currentPort);
 		if (nextHop.getPort() == currentPort) {
 			try {
 				exception.setMessage("Stuck in Loop: calling same port again and again");
@@ -315,7 +319,7 @@ public class MHandler implements Iface {
 			TBinaryProtocol protocol = new TBinaryProtocol(transport);
 			chord_auto_generated.FileStore.Client client = new chord_auto_generated.FileStore.Client(protocol);
 			try {
-				System.out.println("Connecting client findPred");
+				//System.out.println("Connecting client findPred");
 				predNode = client.findPred(key);
 			} catch (SystemException e) {
 				e.printStackTrace();

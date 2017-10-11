@@ -25,17 +25,34 @@ public class JavaClient {
 		try {
 			TTransport transport;
 			// transport = new TSocket("simple", Integer.valueOf("9091"));
-			transport = new TSocket("localhost", 9092);
+			transport = new TSocket("127.0.0.1", 9091);
 			transport.open();
 			TProtocol protocol = new TBinaryProtocol(transport);
 			FileStore.Client client = new FileStore.Client(protocol);
 			// perform(client);
-//			write(client);
-			 read(client);
+			write(client);
+//			 read(client);
+//			pred(client);
+//			 getsuc(client);
 			transport.close();
 		} catch (TException x) {
 			x.printStackTrace();
 		}
+	}
+
+	private static void pred(Client client) throws SystemException, TException {
+		String user = "chetan";
+		String filename = "exmaple.txt";
+		String keyString = user + ":" + filename;
+		String key = sha_256(keyString);
+		
+		NodeID succNode = client.findPred(key);
+		System.out.println("Pred is : "+succNode.port);
+	}
+
+	private static void getsuc(Client client) throws SystemException, TException {
+		NodeID succ = client.getNodeSucc();
+		System.out.println("====> "+succ.port);
 	}
 
 	private static void read(Client client) throws SystemException, TException {
@@ -107,7 +124,7 @@ public class JavaClient {
 			TSocket transport = new TSocket(predIP, predPort);
 			transport.open();
 			TBinaryProtocol protocol = new TBinaryProtocol(transport);
-			client = new chord_auto_generated.FileStore.Client(protocol);
+			Client client1 = new chord_auto_generated.FileStore.Client(protocol);
 			System.out.println("Writting file location : " + predPort);
 			RFile rFile = new RFile();
 			// rFile.setContent("More Updated Files content");
@@ -117,7 +134,7 @@ public class JavaClient {
 			localMeta.setOwner("chetan"); // Is this the client or server probably Client
 			rFile.setMeta(localMeta);
 			System.out.println("Writting file Starting----------");
-			client.writeFile(rFile);
+			client1.writeFile(rFile);
 			System.out.println("Writting file Done----------");
 			transport.close();
 		} catch (TTransportException e) {
