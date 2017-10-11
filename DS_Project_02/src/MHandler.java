@@ -1,7 +1,6 @@
-import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
-import java.util.TreeMap;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -26,14 +25,12 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class MHandler implements Iface {
-	TreeMap<Integer, NodeID> myDHT = new TreeMap<Integer, NodeID>();
-	TreeMap<String, List<fingerTable>> nodesFingerTable = new TreeMap<String, List<fingerTable>>();
-	private String currentIp;
 	public int currentPort;
-	private NodeID currentNode = null;
 	private static List<NodeID> node_ID_list;
 	HashMap<String, RFile> FilesInfo = new HashMap<String, RFile>();
 
@@ -42,19 +39,15 @@ public class MHandler implements Iface {
 		System.out.println("In the writting File function");
 		RFileMetadata clientMeta = rFile.getMeta();
 		String clientContent = rFile.getContent();
-		String clientMetahash = clientMeta.getContentHash();
 		String clientMetaFilename = clientMeta.getFilename();
 		String clientMetaOwner = clientMeta.getOwner();
-		int clientMetaVersion = clientMeta.getVersion();
 		// Check if file is present already.
 		File clientReqFile = new File(clientMetaFilename);
 		if (clientReqFile.exists() && !clientReqFile.isDirectory()) {
 			System.out.println("Writing in existing File: " + clientContent);
-			// TODO check for the permission
 			if (FilesInfo.containsKey(clientMetaFilename)) 
 			{
 			if (FilesInfo.get(clientMetaFilename).getMeta().getOwner().equals(clientMetaOwner)) {
-				// We got owner of file.
 				System.out.println("Got correct owner-----");
 				try (Writer writer = new BufferedWriter(
 						new OutputStreamWriter(new FileOutputStream(clientMetaFilename), "utf-8"))) {
@@ -85,7 +78,6 @@ public class MHandler implements Iface {
 			}
 		} else {
 			System.out.println("Writing in NEW File: " + clientContent);
-			// create File and its metadata.
 			// https://stackoverflow.com/questions/2885173/how-do-i-create-a-file-and-write-to-it-in-java
 			try (Writer writer = new BufferedWriter(
 					new OutputStreamWriter(new FileOutputStream(clientMetaFilename), "utf-8"))) {
@@ -95,7 +87,7 @@ public class MHandler implements Iface {
 				RFileMetadata localMeta = new RFileMetadata();
 				localMeta.setContentHash(sha_256(clientContent));
 				localMeta.setFilename(clientMetaFilename);
-				localMeta.setOwner(clientMetaOwner); // Is this the client or server probably Client
+				localMeta.setOwner(clientMetaOwner); 
 				localMeta.setVersion(0);
 				localRfile.setMeta(localMeta);
 				printRfile(localRfile);
@@ -164,23 +156,13 @@ public class MHandler implements Iface {
 		System.out.println("Set Finger table");
 		System.out.println(node_list);
 		node_ID_list = node_list;
-		int i = 0;
-		for (NodeID nodeID : node_list) {
-			myDHT.put(i++, nodeID);
-		}
 	}
 
 	@Override
 	public NodeID findSucc(String key) throws SystemException, TException {
 		System.out.println("In the Find Succ");
 		NodeID n_dash = new NodeID();
-		currentNode = new NodeID();
 		currentPort = JavaServer.port;
-		try {
-			currentNode = getCurrentNode();
-		} catch (UnknownHostException e1) {
-			e1.printStackTrace();
-		}
 		System.out.println("Going to find Pred");
 		try {
 			n_dash = findPred(key);
@@ -217,14 +199,12 @@ public class MHandler implements Iface {
 	public NodeID findPred(String key) throws SystemException, TException {
 		System.out.println("In the Find Pred");
 		NodeID n_dash = new NodeID();
-		boolean isRPC_Done = false;
 		try {
 			n_dash = getCurrentNode();
 			while ((!compareIDs_FirstNode(n_dash, key))) {
 				n_dash = closest_preceding_fing(n_dash, key);
 				System.out.println("First HOP is here : " + n_dash.getPort());
-				n_dash = nextRpcCall(n_dash, key);
-				isRPC_Done = true;
+				n_dash = rpcToNextHop(n_dash, key);
 				break;
 			}
 		} catch (Exception e) {
@@ -254,15 +234,12 @@ public class MHandler implements Iface {
 		try {
 			for (i = m; i >= 1; i--) {
 				iteratorNode = node_ID_list.get(i);
-				// iteratorNode = myDHT.get(i);
-				System.out.println("=====> " + i);
 				if (compareIDs(iteratorNode, key, n_dash)) {
 					return iteratorNode;
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.exit(0);
 		}
 		return n_dash;
 	}
@@ -272,7 +249,7 @@ public class MHandler implements Iface {
 		if (node_ID_list.size() == 0) {
 			try {
 				SystemException exception = new SystemException();
-				exception.setMessage("Calling same port again, Last entry is same as current node.Infinit loop");
+				exception.setMessage("Stuck in Loop: calling same port again and again");
 				// System.exit(0);
 				throw exception;
 			} catch (SystemException e) {
@@ -282,15 +259,14 @@ public class MHandler implements Iface {
 		return this.node_ID_list.get(0);
 	}
 
-	private NodeID nextRpcCall(NodeID nextHop, String key) throws SystemException, TException {
+	private NodeID rpcToNextHop(NodeID nextHop, String key) throws SystemException, TException {
 		NodeID predNode = new NodeID();
+		SystemException exception = new SystemException();
 		currentPort = JavaServer.port;
 		System.out.println("Calling NEXT RPC : " + nextHop.getPort() + "FROM : " + currentPort);
 		if (nextHop.getPort() == currentPort) {
 			try {
-				// TODO have to refine this code.
-				SystemException exception = new SystemException();
-				exception.setMessage("Calling same port again, Last entry is same as current node.Infinit loop");
+				exception.setMessage("Stuck in Loop: calling same port again and again");
 				// System.exit(0);
 				throw exception;
 			} catch (SystemException e) {
@@ -321,10 +297,14 @@ public class MHandler implements Iface {
 		return predNode;
 	}
 
-	private boolean compareIDs_FirstNode(NodeID n_dash, String key) {
+	private boolean compareIDs_FirstNode(NodeID n_dash, String key) throws SystemException {
 		try {
 			NodeID n_dash_successor = new NodeID();
-			n_dash_successor = node_ID_list.get(0);
+			try {
+				n_dash_successor = node_ID_list.get(0);
+			} catch (Exception e) {
+				e.printStackTrace();
+			} 
 			System.out.println("-------------------[n_dash < Key > n_dash_successor]--------------");
 			System.out.print(n_dash.id + ":" + n_dash.port);
 			System.out.print(" < ");
@@ -349,7 +329,6 @@ public class MHandler implements Iface {
 			else
 				return true;
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return true;
@@ -386,22 +365,15 @@ public class MHandler implements Iface {
 		}
 		return true;
 	}
-
+//Ref: https://stackoverflow.com/questions/5531455/how-to-hash-some-string-with-sha256-in-java
 	public String sha_256(String currentID) {
-		System.out.println("-------->" + currentID);
+		MessageDigest digest = null;
 		try {
-			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-			byte[] hash = digest.digest(currentID.getBytes("UTF-8"));
-			StringBuffer hexString = new StringBuffer();
-			for (int i = 0; i < hash.length; i++) {
-				String hex = Integer.toHexString(0xff & hash[i]);
-				if (hex.length() == 1)
-					hexString.append('0');
-				hexString.append(hex);
-			}
-			return hexString.toString();
-		} catch (Exception ex) {
-			throw new RuntimeException(ex);
+			digest = MessageDigest.getInstance("SHA-256");
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
 		}
-	}
+		byte[] hash = digest.digest(currentID.getBytes(StandardCharsets.UTF_8));
+		String encoded = Base64.getEncoder().encodeToString(hash);
+    return encoded;}
 }

@@ -133,20 +133,14 @@ public class JavaClient {
 	}
 
 	public static String sha_256(String currentID) {
-		System.out.println("-------->" + currentID);
+		MessageDigest digest = null;
 		try {
-			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-			byte[] hash = digest.digest(currentID.getBytes("UTF-8"));
-			StringBuffer hexString = new StringBuffer();
-			for (int i = 0; i < hash.length; i++) {
-				String hex = Integer.toHexString(0xff & hash[i]);
-				if (hex.length() == 1)
-					hexString.append('0');
-				hexString.append(hex);
-			}
-			return hexString.toString();
-		} catch (Exception ex) {
-			throw new RuntimeException(ex);
+			digest = MessageDigest.getInstance("SHA-256");
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-	}
+		byte[] hash = digest.digest(currentID.getBytes(StandardCharsets.UTF_8));
+		String encoded = Base64.getEncoder().encodeToString(hash);
+    return encoded;}
 }
