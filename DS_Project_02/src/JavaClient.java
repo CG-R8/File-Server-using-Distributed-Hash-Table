@@ -35,7 +35,7 @@ public class JavaClient {
 			FileStore.Client client = new FileStore.Client(protocol);
 //			perform(client);
 			write(client);
-			read(client);
+//			read(client);
 			transport.close();
 		} catch (TException x) {
 			x.printStackTrace();
@@ -114,13 +114,12 @@ public class JavaClient {
 			
 			RFile rFile = new RFile();
 			
-//			rFile.setContent("This is the NEW file created ");
-			rFile.setContent("More Updated Files content");
+//			rFile.setContent("More Updated Files content");
+			rFile.setContent("22222222222222222222222");
 
 			RFileMetadata localMeta = new RFileMetadata();
-			localMeta.setFilename("Example.txt");
+			localMeta.setFilename("Example1.txt");
 			localMeta.setOwner("chetan"); // Is this the client or server probably Client
-			localMeta.setVersion(0);
 			rFile.setMeta(localMeta );
 			client1.writeFile(rFile);
 			System.out.println("Writting file Done----------");

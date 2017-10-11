@@ -63,9 +63,11 @@ public class MHandler implements Iface {
 					localRfile.setContent(clientContent);
 					RFileMetadata localMeta = new RFileMetadata();
 					localMeta.setContentHash(sha_256(clientContent));
-					localMeta.setVersion(clientMetaVersion++);
+					localMeta.setVersion(FilesInfo.get(clientMetaFilename).getMeta().version +1);
+					localMeta.setOwner(clientMetaOwner);
+					localMeta.setFilename(clientMetaFilename);
 					localRfile.setMeta(localMeta);
-					FilesInfo.putIfAbsent(clientMetaFilename, localRfile);
+					FilesInfo.put(clientMetaFilename, localRfile);
 					printRfile(localRfile);
 				} catch (UnsupportedEncodingException e) {
 					e.printStackTrace();
