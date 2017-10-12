@@ -25,7 +25,7 @@ public class JavaClient {
 		try {
 			TTransport transport;
 			// transport = new TSocket("simple", Integer.valueOf("9091"));
-			transport = new TSocket("127.0.0.1", 9091);
+			transport = new TSocket("127.0.0.1", 9093);
 			transport.open();
 			TProtocol protocol = new TBinaryProtocol(transport);
 			FileStore.Client client = new FileStore.Client(protocol);
@@ -60,7 +60,7 @@ public class JavaClient {
 //		key = key.toLowerCase();
 		
 		String user = "chetan";
-		String filename = "exmaple.txt";
+		String filename = "Example3.txt";
 		String keyString = user + ":" + filename;
 		String key = sha_256(keyString);
 		
@@ -76,7 +76,7 @@ public class JavaClient {
 			chord_auto_generated.FileStore.Client client1 = new chord_auto_generated.FileStore.Client(protocol);
 			System.out.println("Reading file location : " + predPort);
 			RFile rFile = new RFile();
-			rFile = client1.readFile("Example1.txt", "chetan1");
+			rFile = client1.readFile(filename, user);
 			System.out.println(rFile.getContent());
 			System.out.println(rFile.getMeta().getVersion());
 			System.out.println(rFile.getMeta().getContentHash());
@@ -110,7 +110,7 @@ public class JavaClient {
 		
 		
 		String user = "chetan";
-		String filename = "exmaple.txt";
+		String filename = "Example1.txt";
 		String keyString = user + ":" + filename;
 		String key = sha_256(keyString);
 		
@@ -128,10 +128,10 @@ public class JavaClient {
 			System.out.println("Writting file location : " + predPort);
 			RFile rFile = new RFile();
 			// rFile.setContent("More Updated Files content");
-			rFile.setContent("22222222222222222222222");
+			rFile.setContent("2222222222222222222222");
 			RFileMetadata localMeta = new RFileMetadata();
-			localMeta.setFilename("Example1.txt");
-			localMeta.setOwner("chetan"); // Is this the client or server probably Client
+			localMeta.setFilename(filename);
+			localMeta.setOwner(user); // Is this the client or server probably Client
 			rFile.setMeta(localMeta);
 			System.out.println("Writting file Starting----------");
 			client1.writeFile(rFile);

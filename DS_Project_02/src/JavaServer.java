@@ -28,8 +28,6 @@ public class JavaServer {
 			mcHandler = new MHandler(args[0]);
 			FSProcessor = new FileStore.Processor(mcHandler);
 			port = Integer.parseInt(args[0]);
-			System.out.println(":::port " + port);
-
 			Runnable simple = new Runnable() {
 				public void run() {
 					// simple(processor);
@@ -48,7 +46,7 @@ public class JavaServer {
 		try {
 			TServerTransport serverTransport = new TServerSocket(port);
 			TServer server = new TSimpleServer(new Args(serverTransport).processor(fSProcessor2));
-			System.out.println("Starting the simple server...");
+			System.out.println("Starting the server on port :"+port);
 			server.serve();
 		} catch (Exception e) {
 			e.printStackTrace();
