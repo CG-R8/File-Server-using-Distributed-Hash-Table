@@ -12,16 +12,6 @@ import chord_auto_generated.RFile;
 import chord_auto_generated.RFileMetadata;
 import chord_auto_generated.SystemException;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
-import java.io.Writer;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
@@ -29,10 +19,11 @@ import java.security.MessageDigest;
 public class MHandler implements Iface {
 	public int currentPort;
 	private List<NodeID> node_ID_list;
-	public static HashMap<String, RFile> FilesInfo = new HashMap<String, RFile>();
+	public static HashMap<String, RFile> FilesInfo;
 
 	public MHandler(String string) {
 		currentPort = Integer.parseInt(string);
+		FilesInfo = new HashMap<String, RFile>();
 	}
 
 	@Override
@@ -42,49 +33,22 @@ public class MHandler implements Iface {
 		String clientContent = rFile.getContent();
 		String clientMetaFilename = clientMeta.getFilename();
 		String clientMetaOwner = clientMeta.getOwner();
-		// Check if file is present already.
-		File clientReqFile = new File(clientMetaFilename);
-		if (clientReqFile.exists() && !clientReqFile.isDirectory()) {
-			// System.out.println("Writing in existing File: " + clientContent);
-			if (FilesInfo.containsKey(clientMetaFilename)) {
-				if (FilesInfo.get(clientMetaFilename).getMeta().getOwner().equals(clientMetaOwner)) {
-					// System.out.println("Got correct owner-----");
-					try (Writer writer = new BufferedWriter(
-							new OutputStreamWriter(new FileOutputStream(clientMetaFilename), "utf-8"))) {
-						writer.write(clientContent);
-						RFile localRfile = new RFile();
-						localRfile.setContent(clientContent);
-						RFileMetadata localMeta = new RFileMetadata();
-						localMeta.setContentHash(sha_256(clientContent));
-						localMeta.setVersion(FilesInfo.get(clientMetaFilename).getMeta().version + 1);
-						localMeta.setOwner(clientMetaOwner);
-						localMeta.setFilename(clientMetaFilename);
-						localRfile.setMeta(localMeta);
-						FilesInfo.put(clientMetaFilename, localRfile);
-						printRfile(localRfile);
-					} catch (UnsupportedEncodingException e) {
-						e.printStackTrace();
-					} catch (FileNotFoundException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				} else {
-					SystemException exception = new SystemException();
-					exception.setMessage("Incorrect owner want to write in file");
-					throw exception;
-				}
+		String clientHash = clientMeta.getContentHash();
+		String ownerFilenameHash = sha_256(clientMetaOwner + ":" + clientMetaFilename);
+		try {
+			if (FilesInfo.containsKey(ownerFilenameHash)) {
+				RFile localRfile = new RFile();
+				localRfile.setContent(clientContent);
+				RFileMetadata localMeta = new RFileMetadata();
+				localMeta.setContentHash(sha_256(clientContent));
+				localMeta.setVersion(FilesInfo.get(ownerFilenameHash).getMeta().version + 1);
+				localMeta.setOwner(clientMetaOwner);
+				localMeta.setFilename(clientMetaFilename);
+				localRfile.setMeta(localMeta);
+				FilesInfo.put(ownerFilenameHash, localRfile);
+				printRfile(localRfile);
 			} else {
-				SystemException exception = new SystemException();
-				exception.setMessage("Server have file but do not have srverside metaInfo of file");
-				throw exception;
-			}
-		} else {
-			// System.out.println("Writing in NEW File: " + clientContent);
-			// https://stackoverflow.com/questions/2885173/how-do-i-create-a-file-and-write-to-it-in-java
-			try (Writer writer = new BufferedWriter(
-					new OutputStreamWriter(new FileOutputStream(clientMetaFilename), "utf-8"))) {
-				writer.write(clientContent);
+				// https://stackoverflow.com/questions/2885173/how-do-i-create-a-file-and-write-to-it-in-java
 				RFile localRfile = new RFile();
 				localRfile.setContent(clientContent);
 				RFileMetadata localMeta = new RFileMetadata();
@@ -93,15 +57,11 @@ public class MHandler implements Iface {
 				localMeta.setOwner(clientMetaOwner);
 				localMeta.setVersion(0);
 				localRfile.setMeta(localMeta);
-				// printRfile(localRfile);
-				FilesInfo.put(clientMetaFilename, localRfile);
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
+				printRfile(localRfile);
+				FilesInfo.put(ownerFilenameHash, localRfile);
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -114,40 +74,11 @@ public class MHandler implements Iface {
 
 	@Override
 	public RFile readFile(String filename, String owner) throws SystemException, TException {
+		String ownerFilenameHash = sha_256(owner + ":" + filename);
 		SystemException exception = null;
 		RFile localRfile = new RFile();
-		File clientReqFile = new File(filename);
-		if (clientReqFile.exists() && !clientReqFile.isDirectory()) {
-			if (FilesInfo.containsKey(clientReqFile)) {
-				if (FilesInfo.get(filename).getMeta().getOwner().equals(owner)) {
-					System.out.println("Got correct owner to read File-----");
-					localRfile = FilesInfo.get(filename);
-					localRfile.content = "";
-					BufferedReader br = null;
-					try {
-						br = new BufferedReader(new FileReader(filename));
-					} catch (FileNotFoundException e) {
-						e.printStackTrace();
-					}
-					String singleline = "";
-					try {
-						while ((singleline = br.readLine()) != null) {
-							localRfile.content = localRfile.content + singleline;
-						}
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				} else {
-					System.err.println("Incorrect owner want to read file");
-					exception = new SystemException();
-					exception.setMessage("Incorrect owner want to read file");
-					throw exception;
-				}
-			}else {
-				exception = new SystemException();
-				exception.setMessage("Server have file but do not have srverside metaInfo of file");
-				throw exception;
-			}
+		if (FilesInfo.containsKey(ownerFilenameHash)) {
+			localRfile = FilesInfo.get(ownerFilenameHash);
 		} else {
 			exception = new SystemException();
 			exception.setMessage("File do not exist on server");
@@ -160,10 +91,11 @@ public class MHandler implements Iface {
 	public void setFingertable(List<NodeID> node_list) throws TException {
 		if (node_list.isEmpty()) {
 			SystemException exception = new SystemException();
-			exception.setMessage("Incorrect owner want to read file");
+			exception.setMessage("Finger table is Empty");
 			throw exception;
 		}
 		System.out.println("Finger table for this server is set.");
+		System.out.println(node_list);
 		node_ID_list = node_list;
 	}
 
@@ -172,7 +104,6 @@ public class MHandler implements Iface {
 		if (node_ID_list.isEmpty()) {
 			try {
 				SystemException exception = new SystemException();
-				;
 				exception.setMessage("Finger table is Empty Please restart server");
 				System.exit(0);
 				throw exception;
@@ -224,7 +155,7 @@ public class MHandler implements Iface {
 			n_dash = getCurrentNode();
 			while ((!compareIDs_FirstNode(n_dash, key))) {
 				n_dash = closest_preceding_fing(n_dash, key);
-				System.out.println("One of thr HOP is here : " + n_dash.getPort());
+				System.out.println("One of the HOP is here : " + n_dash.getPort());
 				n_dash = rpcToNextHop(n_dash, key);
 				break;
 			}
@@ -280,9 +211,6 @@ public class MHandler implements Iface {
 	private NodeID rpcToNextHop(NodeID nextHop, String key) throws SystemException, TException {
 		NodeID predNode = new NodeID();
 		SystemException exception = new SystemException();
-		// currentPort = JavaServer.port;
-		// System.out.println("Calling NEXT RPC : " + nextHop.getPort() + "FROM : " +
-		// currentPort);
 		if (nextHop.getPort() == currentPort) {
 			try {
 				exception.setMessage("Stuck in Loop: calling same port again and again");

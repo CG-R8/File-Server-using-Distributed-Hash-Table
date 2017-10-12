@@ -25,13 +25,36 @@ public class JavaClient {
 		try {
 			TTransport transport;
 			// transport = new TSocket("simple", Integer.valueOf("9091"));
-			transport = new TSocket("127.0.0.1", 9093);
+			transport = new TSocket("127.0.0.1", 9094);
 			transport.open();
 			TProtocol protocol = new TBinaryProtocol(transport);
 			FileStore.Client client = new FileStore.Client(protocol);
 			// perform(client);
-			write(client);
-//			 read(client);
+			
+			
+			
+			
+			write(client,"chetan","1","10000000000000000");
+			write(client,"chetan","1","11111111111111111");
+			write(client,"chetan","1","12222222222222222");
+			write(client,"chetan","2","20000000000000000");
+			write(client,"chetan","2","21111111111111111");
+			write(client,"chetan","2","22222222222222222");
+
+//
+			write(client,"chetan1","2","3333333333333333");
+			write(client,"chetan","2","44444444444444444");
+
+
+//			read(client,"chetan1","1");
+//			 
+//			 
+			 
+			 
+			 
+			 
+			 
+			 
 //			pred(client);
 //			 getsuc(client);
 			transport.close();
@@ -55,12 +78,10 @@ public class JavaClient {
 		System.out.println("====> "+succ.port);
 	}
 
-	private static void read(Client client) throws SystemException, TException {
+	private static void read(Client client,String user,String filename) throws SystemException, TException {
 //		String key = "B9836ED79978A750B8D0F3F55A822B504BF0E666F9FCABCE66CD7F038E7CA94F";
 //		key = key.toLowerCase();
 		
-		String user = "chetan";
-		String filename = "Example3.txt";
 		String keyString = user + ":" + filename;
 		String key = sha_256(keyString);
 		
@@ -74,7 +95,7 @@ public class JavaClient {
 			transport.open();
 			TBinaryProtocol protocol = new TBinaryProtocol(transport);
 			chord_auto_generated.FileStore.Client client1 = new chord_auto_generated.FileStore.Client(protocol);
-			System.out.println("Reading file location : " + predPort);
+			System.out.println("Reading file location : " + predPort + " File :"+filename+"Owner : "+user);
 			RFile rFile = new RFile();
 			rFile = client1.readFile(filename, user);
 			System.out.println(rFile.getContent());
@@ -104,13 +125,11 @@ public class JavaClient {
 		System.out.println("Node ID : " + succNode.id + ": NODE IP : " + succNode.ip + "NODE PORT : " + succNode.port);
 	}
 
-	private static void write(Client client) throws SystemException, TException {
+	private static void write(Client client, String user, String filename,String fileContent) throws SystemException, TException {
 //		String key = "B9836ED79978A750B8D0F3F55A822B504BF0E666F9FCABCE66CD7F038E7CA94F";
 //		key = key.toLowerCase();
 		
 		
-		String user = "chetan";
-		String filename = "Example1.txt";
 		String keyString = user + ":" + filename;
 		String key = sha_256(keyString);
 		
@@ -128,7 +147,7 @@ public class JavaClient {
 			System.out.println("Writting file location : " + predPort);
 			RFile rFile = new RFile();
 			// rFile.setContent("More Updated Files content");
-			rFile.setContent("2222222222222222222222");
+			rFile.setContent(fileContent);
 			RFileMetadata localMeta = new RFileMetadata();
 			localMeta.setFilename(filename);
 			localMeta.setOwner(user); // Is this the client or server probably Client
